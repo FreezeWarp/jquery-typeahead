@@ -3178,9 +3178,9 @@
             this.node.focus().trigger('input' + this.namespace, { origin: 'cancelMultiselectItem' });
         },
 
-        adjustInputSize: function () {
+        adjustInputSize: function() {
             var nodeWidth =
-                this.node[0].getBoundingClientRect().width -
+                this.label.container[0].getBoundingClientRect().width -
                 (parseFloat(this.label.container.data("padding-right")) || 0) -
                 (parseFloat(this.label.container.css("padding-left")) || 0);
 
@@ -3193,37 +3193,36 @@
             this.label.container
                 .find("." + this.options.selector.label)
                 .filter(function (i, v) {
-                    if (i === 0) {
-                        labelOuterHeight =
-                            $(v)[0].getBoundingClientRect().height +
-                            parseFloat($(v).css("margin-bottom") || 0);
-                    }
+                    labelOuterHeight +=
+                        $(v)[0].getBoundingClientRect().height +
+                        parseFloat($(v).css("margin-bottom") || 0);
 
-                    // labelOuterWidth = Math.round($(v)[0].getBoundingClientRect().width * 100) / 100 + parseFloat($(v).css('margin-right'));
                     labelOuterWidth =
                         $(v)[0].getBoundingClientRect().width +
                         parseFloat($(v).css("margin-right") || 0);
 
                     if (
-                        currentRowWidth + labelOuterWidth > nodeWidth * 0.7 && !isRowAdded
+                        currentRowWidth + labelOuterWidth > nodeWidth
                     ) {
                         numberOfRows++;
                         isRowAdded = true;
+                        currentRowWidth = labelOuterWidth
                     }
-
-                    if (currentRowWidth + labelOuterWidth < nodeWidth) {
-                        currentRowWidth += labelOuterWidth;
-                    } else {
+                    else {
                         isRowAdded = false;
-                        currentRowWidth = labelOuterWidth;
+                        currentRowWidth += labelOuterWidth;
                     }
                 });
 
+            let pretendIsRowAdded = (currentRowWidth > nodeWidth * 0.7);
+
             var paddingLeft =
                 parseFloat(this.label.container.data("padding-left") || 0) +
-                (isRowAdded ? 0 : currentRowWidth);
+                (pretendIsRowAdded ? 0 : currentRowWidth);
             var paddingTop =
-                numberOfRows * labelOuterHeight +
+                this.label.container[0].getBoundingClientRect().height +
+                (pretendIsRowAdded ? 0 : -40) +
+                4 +
                 parseFloat(this.label.container.data("padding-top") || 0);
 
             this.container
