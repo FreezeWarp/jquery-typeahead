@@ -1586,7 +1586,10 @@
                 return;
             }
 
-            if (!this.result.length) return;
+            if (
+                !this.result.length
+                || (!this.container.hasClass("result") && !this.container.hasClass("backdrop"))
+            ) return;
 
             var itemList = this.resultContainer
                     .find("." + this.options.selector.item)
@@ -1607,20 +1610,18 @@
             ]);
 
             if (e.keyCode === 13) {
-                // Chrome needs preventDefault else the input search event is triggered
-                e.preventDefault();
                 if (activeItem.length > 0) {
+                    // we don't want to fire the form submission event
+                    event.preventDefault();
+
                     // #311 When href is defined and "enter" is pressed, it needs to act as a "clicked" link
                     if (activeItem.find("a:first")[0].href === "javascript:;") {
                         activeItem.find("a:first").trigger("click", e);
                     } else {
                         activeItem.find("a:first")[0].click();
                     }
-                } else {
-                    this.node
-                        .closest("form")
-                        .trigger("submit");
                 }
+
                 return;
             }
 
@@ -1744,7 +1745,7 @@
                     this.node,
                     itemList,
                     (newActiveItemIndex !== null &&
-                    itemList.eq(newActiveItemIndex).find("a:first")) ||
+                        itemList.eq(newActiveItemIndex).find("a:first")) ||
                     undefined,
                     (newActiveDataIndex !== null && this.result[newActiveDataIndex]) ||
                     undefined,
