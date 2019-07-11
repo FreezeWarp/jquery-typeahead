@@ -3232,6 +3232,8 @@
                     paddingLeft: paddingLeft,
                     paddingTop: paddingTop
                 });
+
+            this.node[0].dispatchEvent(new Event('adjusted'));
         },
 
         showLayout: function () {
