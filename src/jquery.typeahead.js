@@ -1510,26 +1510,48 @@
             this.incrementGeneratedGroup();
         },
 
-        incrementGeneratedGroup: function () {
+        incrementGeneratedGroup: function() {
             this.generatedGroupCount++;
-            if (this.generatedGroupCount !== this.generateGroups.length) {
-                return;
-            }
 
             this.xhr = {};
 
             for (var i = 0, ii = this.generateGroups.length; i < ii; i++) {
-                this.source[this.generateGroups[i]] = this.tmpSource[
-                    this.generateGroups[i]
-                    ];
+                this.source[this.generateGroups[i]] = this.tmpSource[this.generateGroups[i]] || [];
+            }
+
+            let itemList,
+                activeItem,
+                activeItemIndex = null;
+
+            if (this.resultContainer) {
+                itemList = this.resultContainer
+                    .find("." + this.options.selector.item)
+                    .not("[disabled]");
+                activeItem = itemList.filter(".active");
+                activeItemIndex = activeItem[0] ? itemList.index(activeItem) : null;
             }
 
             if (!this.hasDynamicGroups) {
                 this.buildDropdownItemLayout("dynamic");
             }
 
-            this.options.loadingAnimation && this.container.removeClass("loading");
             this.node.trigger("search" + this.namespace);
+
+            if (this.resultContainer && activeItemIndex) {
+                this.addActiveItem(
+                    this.resultContainer
+                        .find("." + this.options.selector.item)
+                        .not("[disabled]")
+                        .eq(activeItemIndex)
+                );
+            }
+
+            if (this.generatedGroupCount === this.generateGroups.length) {
+                this.options.loadingAnimation && this.container.removeClass("loading");
+                this.tmpSource = {};
+                //return;
+            }
+
         },
 
         /**
