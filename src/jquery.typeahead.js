@@ -3249,7 +3249,7 @@
                 [
                     this.result.length ||
                     (this.searchGroups.length &&
-                    this.displayEmptyTemplate)
+                        this.displayEmptyTemplate)
                         ? "result "
                         : "",
                     this.options.hint && this.searchGroups.length ? "hint" : "",
@@ -3285,17 +3285,21 @@
                     });
 
                 // If Typeahead is blured by clicking outside, hide the results
-                $("html")
-                    .off("click" + this.namespace + " touchend" + this.namespace)
-                    .on("click" + this.namespace + " touchend" + this.namespace, function (e) {
-                        if ($(e.target).closest(scope.container)[0] ||
-                            $(e.target).closest('.' + scope.options.selector.item)[0] ||
-                            e.target.className === scope.options.selector.cancelButton ||
-                            scope.hasDragged
-                        ) return;
+                document.querySelector('html').removeEventListener('click', this.click_event_listener, true);
+                document.querySelector('html').removeEventListener('touchend', this.touch_event_listener, true);
 
-                        scope.hideLayout();
-                    });
+                let handler = e => {
+                    if ($(e.target).closest(scope.container)[0] ||
+                        $(e.target).closest('.' + scope.options.selector.item)[0] ||
+                        e.target.className === scope.options.selector.cancelButton ||
+                        scope.hasDragged
+                    ) return;
+
+                    scope.hideLayout();
+                };
+
+                this.click_event_listener = document.querySelector('html').addEventListener('click', handler, true);
+                this.touch_event_listener = document.querySelector('html').addEventListener('touchend', handler, true);
             }
         },
 
