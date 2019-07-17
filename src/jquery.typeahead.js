@@ -75,6 +75,7 @@
         emptyTemplate: false,       // Display an empty template if no result
         cancelButton: true,         // If text is detected in the input, a cancel button will be available to reset the input (pressing ESC also cancels)
         loadingAnimation: true,     // Display a loading animation when typeahead is doing request / searching for results
+        noHoverNavigation: false,   // The default behaviour of the typeahead is that hovering over an option sets it as active -- which means that keyboard navigation can then operate from that element.  This fork adds this as an option to disable this behaviour.
         filter: true,               // Set to false or function to bypass Typeahead filtering. WARNING: accent, correlativeTemplate, offset & matcher will not be interpreted
         matcher: null,              // Add an extra filtering function after the typeahead functions
         source: null,               // Source of data for Typeahead to filter
@@ -2499,7 +2500,7 @@
                         );
                     });
                     liHtml.on("mouseenter", function (e) {
-                        if (!item.disabled) {
+                        if (!item.disabled && !scope.options.noHoverNavigation) {
                             scope.clearActiveItem();
                             scope.addActiveItem($(this));
                         }
@@ -2510,7 +2511,7 @@
                         );
                     });
                     liHtml.on("mouseleave", function (e) {
-                        if (!item.disabled) {
+                        if (!item.disabled && !scope.options.noHoverNavigation) {
                             scope.clearActiveItem();
                         }
                         scope.helper.executeCallback.call(
