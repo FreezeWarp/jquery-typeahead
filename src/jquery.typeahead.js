@@ -3176,7 +3176,6 @@
             this.adjustInputSize();
 
             this.focusOnly = true;
-            this.node.focus().trigger('input' + this.namespace, { origin: 'cancelMultiselectItem' });
         },
 
         adjustInputSize: function() {
