@@ -2337,7 +2337,9 @@
                 _liHtml.setAttribute("data-group", _group);
                 _liHtml.setAttribute("data-index", i);
 
+
                 let _liHtmlA = document.createElement("a");
+
                 _liHtmlA.href = _href && !_item.disabled
                     ? (function (href, item) {
                         return item.href = scope.generateHref.call(
@@ -2347,7 +2349,8 @@
                         );
                     })(_href, _item)
                     : "javascript:;";
-                _liHtmlA.html = function () {
+
+                _liHtmlA.innerHTML = function () {
                     _template =
                         (_item.group && scope.options.source[_item.group].template) ||
                         scope.options.template;
@@ -2434,7 +2437,8 @@
 
                     return _aHtml;
                 }();
-                _liHtml.append(_liHtmlA);
+
+                _liHtml.appendChild(_liHtmlA);
 
                 (function (i, item, liHtml) {
 
