@@ -51,7 +51,6 @@
         accent: false,              // Will allow to type accent and give letter equivalent results, also can define a custom replacement object
         highlight: true,            // Added "any" to highlight any word in the template, by default true will only highlight display keys
         multiselect: null,          // Multiselect configuration object, see documentation for all options
-        multiselectUniqueFilter: true, // Whether or not selected items should be removed from the list. Should generally only be disabled if the list is very long (since this is an O(n²) operation, it ain't gonna be fast for large values of n)
         group: false,               // Improved feature, Boolean,string,object(key, template (string, function))
         groupOrder: null,           // New feature, order groups "asc", "desc", Array, Function
         maxItemPerGroup: null,      // Maximum number of result per Group
@@ -3069,7 +3068,7 @@
         isMultiselectUniqueData: function (data) {
             var isUniqueData = true;
 
-            if (this.options.multiselectUniqueFilter) {
+            if (this.options.multiselect.uniqueFilter) {
                 for (var x = 0, xx = this.comparedItems.length; x < xx; ++x) {
                     if (
                         this.comparedItems[x] ===
