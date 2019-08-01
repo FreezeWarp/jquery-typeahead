@@ -2310,15 +2310,17 @@
                             ? groupTemplate.querySelector('[data-group-template="' + _group + '"] ul')
                             : groupTemplate;
 
-                        target.innerHTML += $("<li/>", {
-                            class: scope.options.selector.group,
-                            html: $("<a/>", {
-                                href: "javascript:;",
-                                html: _groupTemplate || _group,
-                                tabindex: -1
-                            }),
-                            "data-search-group": _group
-                        }).html();
+                        let _li = document.createElement('li');
+                        _li.classList.add(scope.options.selector.group);
+                        _li.setAttribute('data-search-group', _group);
+
+                        let _liA = document.createElement('a');
+                        _liA.href = "javascript:;";
+                        _liA.innerHTML = _groupTemplate || _group;
+                        _liA.tabIndex = -1;
+
+                        _li.appendChild(_liA);
+                        target.appendChild(_li);
                     }
                 }
 
