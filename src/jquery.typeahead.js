@@ -51,6 +51,7 @@
         accent: false,              // Will allow to type accent and give letter equivalent results, also can define a custom replacement object
         highlight: true,            // Added "any" to highlight any word in the template, by default true will only highlight display keys
         multiselect: null,          // Multiselect configuration object, see documentation for all options
+        multiselectUniqueFilter: true, // Whether or not selected items should be removed from the list. Should generally only be disabled if the list is very long (since this is an O(n²) operation, it ain't gonna be fast for large values of n)
         group: false,               // Improved feature, Boolean,string,object(key, template (string, function))
         groupOrder: null,           // New feature, order groups "asc", "desc", Array, Function
         maxItemPerGroup: null,      // Maximum number of result per Group
@@ -2214,7 +2215,7 @@
                 hasEmptyTemplate = false;
 
             if (this.groupTemplate) {
-                groupTemplate = $(
+                groupTemplate = (new DOMParser()).parseFromString(
                     groupTemplate.replace(
                         /<([^>]+)>\{\{(.+?)}}<\/[^>]+>/g,
                         function (match, tag, group, offset, string) {
@@ -2236,27 +2237,27 @@
 
                             return template;
                         }
-                    )
-                );
+                    ),
+                    'text/html'
+                ).body.childNodes
             } else {
-                groupTemplate = $(groupTemplate);
+                groupTemplate = (new DOMParser()).parseFromString(groupTemplate, 'text/html').body.childNodes;
+
                 if (!this.result.length) {
-                    groupTemplate.append(
+                    groupTemplate.innerHTML += (
                         emptyTemplate instanceof $
-                            ? emptyTemplate
-                            : '<li class="' +
-                            scope.options.selector.empty +
-                            '">' +
-                            emptyTemplate +
-                            "</li>"
+                            ? $(emptyTemplate).html()
+                            : '<li class="' + scope.options.selector.empty + '">'
+                                + emptyTemplate
+                                + "</li>"
                     );
                 }
             }
 
-            groupTemplate.addClass(
-                this.options.selector.list +
-                (this.helper.isEmpty(this.result) ? " empty" : "")
-            );
+            groupTemplate.classList.add(this.options.selector.list);
+            if (this.helper.isEmpty(this.result)) {
+                groupTemplate.classList.add('empty');
+            }
 
             var _group,
                 _groupTemplate,
@@ -2304,20 +2305,20 @@
                         }
                     }
 
-                    if (!groupTemplate.find('[data-search-group="' + _group + '"]')[0]) {
-                        (this.groupTemplate
-                            ? groupTemplate.find('[data-group-template="' + _group + '"] ul')
-                            : groupTemplate).append(
-                            $("<li/>", {
-                                class: scope.options.selector.group,
-                                html: $("<a/>", {
-                                    href: "javascript:;",
-                                    html: _groupTemplate || _group,
-                                    tabindex: -1
-                                }),
-                                "data-search-group": _group
-                            })
-                        );
+                    if (!groupTemplate.querySelector('[data-search-group="' + _group + '"]')) {
+                        let target = this.groupTemplate
+                            ? groupTemplate.querySelector('[data-group-template="' + _group + '"] ul')
+                            : groupTemplate;
+
+                        target.innerHTML += $("<li/>", {
+                            class: scope.options.selector.group,
+                            html: $("<a/>", {
+                                href: "javascript:;",
+                                html: _groupTemplate || _group,
+                                tabindex: -1
+                            }),
+                            "data-search-group": _group
+                        }).html();
                     }
                 }
 
@@ -2328,126 +2329,117 @@
                     }
                 }
 
-                _liHtml = $("<li/>", {
-                    class: scope.options.selector.item + " " + scope.options.selector.group + "-" + this.helper.slugify.call(this, _group),
-                    disabled: _item.disabled ? true : false,
-                    "data-group": _group,
-                    "data-index": i,
-                    html: $("<a/>", {
-                        href: _href && !_item.disabled
-                            ? (function (href, item) {
-                                return item.href = scope.generateHref.call(
-                                    scope,
-                                    href,
-                                    item
-                                );
-                            })(_href, _item)
-                            : "javascript:;",
-                        html: function () {
-                            _template =
-                                (_item.group && scope.options.source[_item.group].template) ||
-                                scope.options.template;
+                _liHtml = document.createElement("li");
+                _liHtml.classList.add(scope.options.selector.item, scope.options.selector.group + "-" + this.helper.slugify.call(this, _group));
+                _liHtml.disabled = _item.disabled ? true : false;
+                _liHtml.setAttribute("data-group", _group);
+                _liHtml.setAttribute("data-index", i);
 
-                            if (_template) {
-                                if (typeof _template === "function") {
-                                    _template = _template.call(scope, scope.query, _item);
-                                }
+                let _liHtmlA = document.createElement("a");
+                _liHtmlA.href = _href && !_item.disabled
+                    ? (function (href, item) {
+                        return item.href = scope.generateHref.call(
+                            scope,
+                            href,
+                            item
+                        );
+                    })(_href, _item)
+                    : "javascript:;";
+                _liHtmlA.html = function () {
+                    _template =
+                        (_item.group && scope.options.source[_item.group].template) ||
+                        scope.options.template;
 
-                                _aHtml = _template.replace(
-                                    /\{\{([^\|}]+)(?:\|([^}]+))*}}/gi,
-                                    function (match, index, options) {
-                                        var value = scope.helper.cleanStringFromScript(
-                                            String(
-                                                scope.helper.namespace.call(
-                                                    scope,
-                                                    index,
-                                                    _item,
-                                                    "get",
-                                                    ""
-                                                )
-                                            )
-                                        );
+                    if (_template) {
+                        if (typeof _template === "function") {
+                            _template = _template.call(scope, scope.query, _item);
+                        }
 
-                                        // #151 Slugify should be an option, not enforced
-                                        options = (options && options.split("|")) || [];
-                                        if (~options.indexOf("slugify")) {
-                                            value = scope.helper.slugify.call(scope, value);
-                                        }
-
-                                        if (!~options.indexOf("raw")) {
-                                            if (
-                                                scope.options.highlight === true &&
-                                                _query && ~_displayKeys.indexOf(index)
-                                            ) {
-                                                value = scope.helper.highlight.call(
-                                                    scope,
-                                                    value,
-                                                    _query.split(" "),
-                                                    scope.options.accent
-                                                );
-                                            }
-                                        }
-                                        return value;
-                                    }
-                                );
-                            } else {
-                                for (var i = 0, ii = _displayKeys.length; i < ii; i++) {
-                                    _displayValue = /\./.test(_displayKeys[i])
-                                        ? scope.helper.namespace.call(
+                        _aHtml = _template.replace(
+                            /\{\{([^\|}]+)(?:\|([^}]+))*}}/gi,
+                            function (match, index, options) {
+                                var value = scope.helper.cleanStringFromScript(
+                                    String(
+                                        scope.helper.namespace.call(
                                             scope,
-                                            _displayKeys[i],
+                                            index,
                                             _item,
                                             "get",
                                             ""
                                         )
-                                        : _item[_displayKeys[i]];
-
-                                    if (
-                                        typeof _displayValue === "undefined" ||
-                                        _displayValue === ""
                                     )
-                                        continue;
+                                );
 
-                                    _display.push(_displayValue);
+                                // #151 Slugify should be an option, not enforced
+                                options = (options && options.split("|")) || [];
+                                if (~options.indexOf("slugify")) {
+                                    value = scope.helper.slugify.call(scope, value);
                                 }
 
-                                _aHtml =
-                                    '<span class="' +
-                                    scope.options.selector.display +
-                                    '">' +
-                                    scope.helper.cleanStringFromScript(
-                                        String(_display.join(" "))
-                                    ) +
-                                    "</span>";
+                                if (!~options.indexOf("raw")) {
+                                    if (
+                                        scope.options.highlight === true &&
+                                        _query && ~_displayKeys.indexOf(index)
+                                    ) {
+                                        value = scope.helper.highlight.call(
+                                            scope,
+                                            value,
+                                            _query.split(" "),
+                                            scope.options.accent
+                                        );
+                                    }
+                                }
+                                return value;
                             }
+                        );
+                    } else {
+                        for (var i = 0, ii = _displayKeys.length; i < ii; i++) {
+                            _displayValue = /\./.test(_displayKeys[i])
+                                ? scope.helper.namespace.call(
+                                    scope,
+                                    _displayKeys[i],
+                                    _item,
+                                    "get",
+                                    ""
+                                )
+                                : _item[_displayKeys[i]];
 
                             if (
-                                (scope.options.highlight === true && _query && !_template) ||
-                                scope.options.highlight === "any"
-                            ) {
-                                _aHtml = scope.helper.highlight.call(
-                                    scope,
-                                    _aHtml,
-                                    _query.split(" "),
-                                    scope.options.accent
-                                );
-                            }
+                                typeof _displayValue === "undefined" ||
+                                _displayValue === ""
+                            )
+                                continue;
 
-                            $(this).append(_aHtml);
+                            _display.push(_displayValue);
                         }
-                    })
-                });
+
+                        _aHtml = '<span class="' + scope.options.selector.display + '">'
+                            + scope.helper.cleanStringFromScript(String(_display.join(" ")))
+                            + "</span>";
+                    }
+
+                    if (
+                        (scope.options.highlight === true && _query && !_template) ||
+                        scope.options.highlight === "any"
+                    ) {
+                        _aHtml = scope.helper.highlight.call(
+                            scope,
+                            _aHtml,
+                            _query.split(" "),
+                            scope.options.accent
+                        );
+                    }
+
+                    return _aHtml;
+                }();
+                _liHtml.append(_liHtmlA);
 
                 (function (i, item, liHtml) {
-                    liHtml.on("click", function (e, originalEvent) {
+
+                    liHtml.addEventListener("click", function (e) {
                         if (item.disabled) {
                             e.preventDefault();
                             return;
-                        }
-
-                        // #208 - Attach "keyboard Enter" original event
-                        if (originalEvent && typeof originalEvent === "object") {
-                            e.originalEvent = originalEvent;
                         }
 
                         if (scope.options.mustSelectItem && scope.helper.isEmpty(item)) {
@@ -2467,10 +2459,7 @@
                             ) === false
                         ) return;
 
-                        if (
-                            (e.originalEvent && e.originalEvent.defaultPrevented) ||
-                            e.isDefaultPrevented()
-                        ) return;
+                        if (e.defaultPrevented) return;
 
                         if (scope.options.multiselect) {
                             scope.query = scope.rawQuery = "";
@@ -2499,7 +2488,8 @@
                             [scope.node, $(this), item, e]
                         );
                     });
-                    liHtml.on("mouseenter", function (e) {
+
+                    liHtml.addEventListener("mouseenter", function (e) {
                         if (!item.disabled && !scope.options.noHoverNavigation) {
                             scope.clearActiveItem();
                             scope.addActiveItem($(this));
@@ -2510,7 +2500,8 @@
                             [scope.node, $(this), item, e]
                         );
                     });
-                    liHtml.on("mouseleave", function (e) {
+
+                    liHtml.addEventListener("mouseleave", function (e) {
                         if (!item.disabled && !scope.options.noHoverNavigation) {
                             scope.clearActiveItem();
                         }
@@ -2520,22 +2511,25 @@
                             [scope.node, $(this), item, e]
                         );
                     });
+
                 })(i, _item, _liHtml);
 
-                (this.groupTemplate
-                    ? groupTemplate.find('[data-group-template="' + _group + '"] ul')
-                    : groupTemplate).append(_liHtml);
+                let target = this.groupTemplate
+                    ? groupTemplate.querySelector('[data-group-template="' + _group + '"] ul')
+                    : groupTemplate;
+
+                target.appendChild(_liHtml);
             }
 
             if (this.result.length && _unusedGroups.length) {
                 for (var i = 0, ii = _unusedGroups.length; i < ii; ++i) {
                     groupTemplate
-                        .find('[data-group-template="' + _unusedGroups[i] + '"]')
+                        .querySelector('[data-group-template="' + _unusedGroups[i] + '"]')
                         .remove();
                 }
             }
 
-            this.resultHtml = groupTemplate;
+            this.resultHtml = $(groupTemplate);
         },
 
         generateHref: function (href, item) {
@@ -3068,15 +3062,19 @@
 
         isMultiselectUniqueData: function (data) {
             var isUniqueData = true;
-            for (var x = 0, xx = this.comparedItems.length; x < xx; ++x) {
-                if (
-                    this.comparedItems[x] ===
-                    this.getMultiselectComparedData(data)
-                ) {
-                    isUniqueData = false;
-                    break;
+
+            if (this.options.multiselectUniqueFilter) {
+                for (var x = 0, xx = this.comparedItems.length; x < xx; ++x) {
+                    if (
+                        this.comparedItems[x] ===
+                        this.getMultiselectComparedData(data)
+                    ) {
+                        isUniqueData = false;
+                        break;
+                    }
                 }
             }
+
             return isUniqueData;
         },
 
