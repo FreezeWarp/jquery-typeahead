@@ -2239,9 +2239,9 @@
                         }
                     ),
                     'text/html'
-                ).body.childNodes
+                ).body.childNodes[0]
             } else {
-                groupTemplate = (new DOMParser()).parseFromString(groupTemplate, 'text/html').body.childNodes;
+                groupTemplate = (new DOMParser()).parseFromString(groupTemplate, 'text/html').body.childNodes[0];
 
                 if (!this.result.length) {
                     groupTemplate.innerHTML += (
