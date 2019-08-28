@@ -1615,12 +1615,7 @@
                     // we don't want to fire the form submission event
                     event.preventDefault();
 
-                    // #311 When href is defined and "enter" is pressed, it needs to act as a "clicked" link
-                    if (activeItem.find("a:first")[0].href === "javascript:;") {
-                        activeItem.find("a:first").trigger("click", e);
-                    } else {
-                        activeItem.find("a:first")[0].click();
-                    }
+                    activeItem.find("a:first")[0].click();
                 }
 
                 return;
