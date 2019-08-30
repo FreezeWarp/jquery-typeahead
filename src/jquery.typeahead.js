@@ -1243,6 +1243,12 @@
          * @return {*}
          */
         populateSource: function (data, group, path) {
+
+            // disable pointer events when we begin running -- we're going to be blocking the thread for... a bit, so any clicks registered in this time are potentially intended for a different target
+            if (this.resultContainer) {
+                this.resultContainer[0].style.pointerEvents = 'none';
+            }
+
             var scope = this,
                 groupSource = this.options.source[group],
                 extraData = groupSource.ajax && groupSource.data;
@@ -1509,6 +1515,11 @@
             }
 
             this.incrementGeneratedGroup();
+
+            // reenable pointer events now
+            if (this.resultContainer) {
+                this.resultContainer[0].style.pointerEvents = 'auto';
+            }
         },
 
         incrementGeneratedGroup: function() {
