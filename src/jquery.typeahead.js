@@ -1969,13 +1969,28 @@
                                 );
                             }
 
-                            match = comparedDisplay.indexOf(comparedQuery);
+                            let match = false;
+
+                            if (comparedQuery.length === 0) {
+                                // do nothing
+                            }
+                            else if (this.options.offset) {
+                                match = comparedDisplay.indexOf(comparedQuery) === 0;
+                            } else {
+                                match = true;
+                                for (let token of comparedQuery.split(/\s+/)) {
+                                    if (comparedDisplay.indexOf(token) === -1) {
+                                        match = false;
+                                        break;
+                                    }
+                                }
+                            }
 
                             if (
-                                this.options.correlativeTemplate &&
-                                displayKeys[v] === "compiled" &&
-                                match < 0 &&
-                                /\s/.test(comparedQuery)
+                                this.options.correlativeTemplate
+                                && displayKeys[v] === "compiled"
+                                && match
+                                && /\s/.test(comparedQuery)
                             ) {
                                 correlativeMatch = true;
                                 correlativeQuery = comparedQuery.split(" ");
@@ -1993,8 +2008,7 @@
                                 }
                             }
 
-                            if (match < 0 && !correlativeMatch) continue;
-                            if (this.options.offset && match !== 0) continue;
+                            if (!match && !correlativeMatch) continue;
 
                             if (groupMatcher) {
                                 groupMatcherResult = groupMatcher.call(
