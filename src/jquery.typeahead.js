@@ -1972,9 +1972,8 @@
                             let match = false;
 
                             if (comparedQuery.length === 0) {
-                                // do nothing
-                            }
-                            else if (this.options.offset) {
+                                match = true;
+                            } else if (this.options.offset) {
                                 match = comparedDisplay.indexOf(comparedQuery) === 0;
                             } else {
                                 match = true;
