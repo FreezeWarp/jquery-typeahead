@@ -3259,27 +3259,27 @@
         },
 
         showLayout: function () {
-            if (this.container.hasClass("result") ||
+            if (!this.container.hasClass("result") &&
                 (
-                    !this.result.length && !this.displayEmptyTemplate && !this.options.backdropOnFocus
+                    this.result.length || this.displayEmptyTemplate || this.options.backdropOnFocus
                 )
-            ) return;
+            ) {
+                _addHtmlListeners.call(this);
 
-            _addHtmlListeners.call(this);
-
-            this.container.addClass(
-                [
-                    this.result.length ||
-                    (this.searchGroups.length &&
-                        this.displayEmptyTemplate)
-                        ? "result "
-                        : "",
-                    this.options.hint && this.searchGroups.length ? "hint" : "",
-                    this.options.backdrop || this.options.backdropOnFocus
-                        ? "backdrop"
-                        : ""
-                ].join(" ")
-            );
+                this.container.addClass(
+                    [
+                        this.result.length ||
+                        (this.searchGroups.length &&
+                            this.displayEmptyTemplate)
+                            ? "result "
+                            : "",
+                        this.options.hint && this.searchGroups.length ? "hint" : "",
+                        this.options.backdrop || this.options.backdropOnFocus
+                            ? "backdrop"
+                            : ""
+                    ].join(" ")
+                );
+            }
 
             this.helper.executeCallback.call(
                 this,
