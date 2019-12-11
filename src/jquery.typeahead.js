@@ -1561,6 +1561,7 @@
             if (this.generatedGroupCount === this.generateGroups.length) {
                 this.options.loadingAnimation && this.container.removeClass("loading");
                 this.tmpSource = {};
+                this.node[0].dispatchEvent(new Event('loaded'));
                 //return;
             }
 
