@@ -1978,7 +1978,7 @@
                                 match = comparedDisplay.indexOf(comparedQuery) === 0;
                             } else {
                                 match = true;
-                                for (let token of comparedQuery.split(/\s+/)) {
+                                for (let token of comparedQuery.split(/[\s\p{P}]+/gu)) {
                                     if (comparedDisplay.indexOf(token) === -1) {
                                         match = false;
                                         break;
